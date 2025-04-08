@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Configuration Search Chatbot</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    #queryInput {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #response {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      background-color: #ffffff;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      min-height: 100px;
+    }
+    .loading {
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h2>Configuration Search Assistant</h2>
+
+  <input type="text" id="queryInput" placeholder="Ask your config question..." />
+  <button onclick="sendQuery()">Send</button>
+
+  <div id="response"></div>
+
+  <script>
+    async function sendQuery() {
+      const query = document.getElementById("queryInput").value;
+      const responseDiv = document.getElementById("response");
+      responseDiv.textContent = "";
+
+      if (!query.trim()) {
+        responseDiv.textContent = "Please enter a question.";
+        return;
+      }
+
+      responseDiv.classList.add("loading");
+      responseDiv.textContent = "Thinking...";
+
+      try {
+        const res = await fetch("http://127.0.0.1:5050/query", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query }),
+        });
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let result = "";
+
+        responseDiv.textContent = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          result += decoder.decode(value, { stream: true });
+        }
+
+        // Try to extract just the "response" field if JSON-parsable
+        try {
+          const parsed = JSON.parse(result);
+          const responseMarkdown = parsed.response || result;
+          responseDiv.innerHTML = marked.parse(responseMarkdown);
+        } catch {
+          responseDiv.innerHTML = marked.parse(result);
+        }
+
+      } catch (err) {
+        responseDiv.textContent = "Error: " + err.message;
+      } finally {
+        responseDiv.classList.remove("loading");
+      }
+    }
+  </script>
+</body>
+</html>
