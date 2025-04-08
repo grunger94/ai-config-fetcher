@@ -86,7 +86,7 @@ def answer_user_question(query, relevant_configs):
             Question: {query}
             
             When there is a concise answer, for example, a single application name or a list of environment names, don't explain your reasoning.
-            
+            If the user is only giving you an application and environment (or a list), assume they are asking you to retrieve entire config files.
             """)
 
     formatted_prompt = prompt.format(config_str=relevant_configs_str, query=query)

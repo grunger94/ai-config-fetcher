@@ -18,12 +18,14 @@
       text-align: center;
     }
     #queryInput {
-      width: 100%;
-      padding: 12px;
-      font-size: 1em;
-      margin-top: 10px;
+      width: 95%;
+      min-height: 40px;
+      resize: none;
+      overflow-y: hidden;
+      padding: 15px;
+      font-size: 16px;
+      line-height: 1.5;
       border: 1px solid #ccc;
-      border-radius: 8px;
     }
     button {
       margin-top: 10px;
@@ -47,6 +49,9 @@
       border-radius: 8px;
       border: 1px solid #ccc;
       min-height: 100px;
+      max-height: 400px;       /* or any height you prefer */
+      overflow-y: auto;        /* enables vertical scrolling when needed */
+      overflow-x: auto;        /* optional: enables horizontal scrolling if needed */
     }
     .loading {
       color: #999;
@@ -57,12 +62,18 @@
 <body>
   <h2>Configuration Search Assistant</h2>
 
-  <input type="text" id="queryInput" placeholder="Ask your config question..." />
+  <textarea id="queryInput" rows="1" placeholder="Type your query..."></textarea>
   <button onclick="sendQuery()">Send</button>
 
   <div id="response"></div>
 
   <script>
+    const textarea = document.getElementById('queryInput');
+
+    textarea.addEventListener('input', () => {
+      textarea.style.height = 'auto'; // Reset the height
+      textarea.style.height = textarea.scrollHeight + 'px'; // Set new height based on content
+    });
     async function sendQuery() {
       const query = document.getElementById("queryInput").value;
       const responseDiv = document.getElementById("response");
