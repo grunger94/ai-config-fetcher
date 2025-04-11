@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Configuration Search Chatbot</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.3/dist/purify.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -107,14 +108,14 @@
           if (done) break;
           result += decoder.decode(value, { stream: true });
         }
+        result += decoder.decode(); // flush remaining buffer
 
-        // Try to extract just the "response" field if JSON-parsable
         try {
           const parsed = JSON.parse(result);
-          const responseMarkdown = parsed.response || result;
-          responseDiv.innerHTML = marked.parse(responseMarkdown);
+          const maybeOutput = parsed?.response?.output || parsed?.response || parsed;
+          responseDiv.innerHTML = DOMPurify.sanitize(marked.parse(maybeOutput));
         } catch {
-          responseDiv.innerHTML = marked.parse(result);
+          responseDiv.innerHTML = DOMPurify.sanitize(marked.parse(result));
         }
 
       } catch (err) {
