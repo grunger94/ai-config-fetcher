@@ -2,6 +2,7 @@ import json
 import logging
 import os
 
+from dotenv import load_dotenv
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
@@ -12,6 +13,7 @@ from app.services.vector_storage import store_embedding, get_stored_hash, fetch_
 from app.utils.hashing import get_file_hash
 
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 APP_LIST = os.getenv("APP_LIST", "").split(",")
 ENV_LIST = os.getenv("ENV_LIST", "").split(",")
@@ -38,11 +40,11 @@ def extract_apps_and_envs(query: str):
         }}
         Query:
         
-        {query}
+        {input}
         """)
 
     return invoke_llm(prompt, {
-        "query": query,
+        "input": query,
         "known_apps": ", ".join(APP_LIST),
         "known_envs": ", ".join(ENV_LIST)
     }, JsonOutputParser())
@@ -54,18 +56,18 @@ def extract_keys(query: str):
 
     prompt = PromptTemplate.from_template("""
         Your job is to extract only the relevant configuration keys that are mentioned or implied in the query. 
-        These are specific key names like "log_level", "enable_feature_x", "timeout", etc.
+        These are specific key names like "log_level", "enable_feature_x", "service_metadata.contact_info", "timeout", etc.
     
         Given this user query:
-        "{query}"
+        "{input}"
     
         Return a JSON list of strings. Example:
-        ["log_level", "enable_feature_x"]
+        ["log_level", "enable_feature_x", "service_metadata.contact_info"]
         
         If no keys are identified, return an empty JSON list.
         """)
 
-    return invoke_llm(prompt, {"query": query}, JsonOutputParser())
+    return invoke_llm(prompt, {"input": query}, JsonOutputParser())
 
 def update_database_configurations(apps, envs):
     """
